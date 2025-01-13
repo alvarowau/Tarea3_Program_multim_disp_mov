@@ -2,4 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background_color">#F5F5F5</color>
+    <color name="color_par">#E8F5E9</color>  <!-- Un verde muy suave -->
+    <color name="color_impar">#FFF3E0</color> <!-- Un naranja claro -->
 </resources>

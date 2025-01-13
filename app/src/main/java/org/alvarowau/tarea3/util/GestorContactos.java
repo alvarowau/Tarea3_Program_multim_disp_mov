@@ -128,4 +128,18 @@ public class GestorContactos {
     public Contacto devolverContactoID(int id){
         return gestorBD.obtenerContactoPorId(id);
     }
+
+    public String obtenerImagenDeContacto(int idContacto) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, String.valueOf(idContacto));
+        Cursor cursor = contentResolver.query(uri, new String[]{ContactsContract.Contacts.PHOTO_URI}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int photoUriIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI);
+            String photoUri = cursor.getString(photoUriIndex);
+            cursor.close();
+            return photoUri != null ? photoUri : null;  // Si no tiene foto, devuelve null
+        }
+        return null;  // Si no se encuentra la imagen, devuelve null
+    }
 }

@@ -39,6 +39,10 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
+    // https://mvnrepository.com/artifact/com.squareup.picasso/picasso
+    implementation(libs.picasso)
+    implementation(libs.core)
+
     implementation(libs.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

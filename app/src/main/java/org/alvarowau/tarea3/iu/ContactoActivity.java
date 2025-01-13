@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.alvarowau.tarea3.MainActivity;
 import org.alvarowau.tarea3.R;
+import org.alvarowau.tarea3.databinding.ActivityContactoBinding;
 import org.alvarowau.tarea3.db.GestorBBDD;
 import org.alvarowau.tarea3.model.Contacto;
 import org.alvarowau.tarea3.util.GestorContactos;
@@ -31,25 +32,23 @@ public class ContactoActivity extends AppCompatActivity implements View.OnClickL
 
 
 
+    private ActivityContactoBinding binding;
     private int contactoId;
-    private EditText etNombre, etFechaNac, etMensaje;
-    private CheckBox cbNotificacion;
+
 //    private Calendar calendar;
 //    private SimpleDateFormat dateFormat;
     private Contacto contacto;
     private GestorContactos gestorContactos;
     private GestorBBDD gestorBD;
 
-    private ImageView ivFoto;
-    private Spinner spTelefonos;
-    private Button btnEditar;
-    private Button btnGuardar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_contacto);
+        binding = ActivityContactoBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
         gestorBD = new GestorBBDD(this);
         gestorContactos = new GestorContactos(this, gestorBD);
 
@@ -57,7 +56,7 @@ public class ContactoActivity extends AppCompatActivity implements View.OnClickL
         contacto = new Contacto();
         Intent intent = getIntent();
         if (intent != null) {
-            contactoId = intent.getIntExtra(MainActivity.NOMBRE_CONTACTO, -1);  // Si no se pasa el ID, se obtiene -1 como valor predeterminado
+            contactoId = intent.getIntExtra(MainActivity.ID_CONTACTO, -1);  // Si no se pasa el ID, se obtiene -1 como valor predeterminado
         }
 
         // Ahora puedes usar el contactoId para obtener el contacto desde la base de datos o el gestor de contactos
@@ -71,42 +70,28 @@ public class ContactoActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
-    private void initComponents(){
-        ivFoto = findViewById(R.id.ivFoto);
-        etNombre = findViewById(R.id.etNombre);
-        cbNotificacion = findViewById(R.id.cbNotificacion);
-        spTelefonos = findViewById(R.id.spTelefonos);
-        etFechaNac = findViewById(R.id.etFechaNac);
-        etMensaje = findViewById(R.id.etMensaje);
-        btnEditar = findViewById(R.id.btnEditar);
-        btnGuardar = findViewById(R.id.btnGuardar);
 
-    }
 
     private void rellenarDatos(Contacto contacto) {
 
-        if (contacto != null) {
-            ivFoto.setImageDrawable(Contacto.generarDrawable(this, contacto.getImagenURI()));
-            etNombre.setText(contacto.getNombre());
-            cbNotificacion.setChecked(contacto.getTipoAviso().equals("S"));
-            ArrayList<String> telefonos = gestorContactos.obtenerTelefonos(contacto.getNombre());
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, telefonos);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spTelefonos.setAdapter(adapter);
-            etFechaNac.setText(contacto.getFechaNac());
-            etMensaje.setText(contacto.getMensaje());
-            btnEditar.setOnClickListener(this);
-            btnGuardar.setOnClickListener(this);
-        }
+//        if (contacto != null) {
+//            ivFoto.setImageDrawable(Contacto.generarDrawable(this, contacto.getImagenURI()));
+//            etNombre.setText(contacto.getNombre());
+//            cbNotificacion.setChecked(contacto.getTipoAviso().equals("S"));
+//            ArrayList<String> telefonos = gestorContactos.obtenerTelefonos(contacto.getNombre());
+//            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, telefonos);
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//            spTelefonos.setAdapter(adapter);
+//            etFechaNac.setText(contacto.getFechaNac());
+//            etMensaje.setText(contacto.getMensaje());
+//            btnEditar.setOnClickListener(this);
+//            btnGuardar.setOnClickListener(this);
+//        }
     }
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.btnEditar) {
-            // Llamar al intent de edición
-        } else if (v.getId() == R.id.btnGuardar) {
-            // Guardar cambios en el contacto
-        }
+
     }
 
 //    private void showDatePickerDialog() {
