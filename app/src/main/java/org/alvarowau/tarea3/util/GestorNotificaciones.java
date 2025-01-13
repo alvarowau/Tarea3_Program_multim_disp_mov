@@ -14,12 +14,6 @@ public class GestorNotificaciones {
         this.context = context;
     }
 
-    /**
-     * Configura una alarma diaria a la hora y minuto especificados.
-     *
-     * @param hora   Hora de la alarma.
-     * @param minuto Minuto de la alarma.
-     */
     public void configurarAlarmaDiaria(int hora, int minuto) {
         Calendar calendario = Calendar.getInstance();
         calendario.setTimeInMillis(System.currentTimeMillis());
@@ -35,4 +29,5 @@ public class GestorNotificaciones {
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendario.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
         }
     }
+
 }

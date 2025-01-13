@@ -12,14 +12,12 @@ import java.util.List;
 
 public class ContactAdapter extends RecyclerView.Adapter<ContactoViewHolder> {
 
-    // Lista de contactos que será gestionada por el adaptador
     private List<Contacto> contactoList;
 
     private int contador = 0;
 
     private ContactClickListener clickListener;
 
-    // Constructor que inicializa la lista como una lista vacía
     public ContactAdapter(ContactClickListener clickListener) {
         this.contactoList = new ArrayList<>();
         this.clickListener = clickListener;

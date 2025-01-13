@@ -2,108 +2,161 @@ package org.alvarowau.tarea3.iu;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
+import android.provider.ContactsContract;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Spinner;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.squareup.picasso.Picasso;
 
 import org.alvarowau.tarea3.MainActivity;
 import org.alvarowau.tarea3.R;
 import org.alvarowau.tarea3.databinding.ActivityContactoBinding;
-import org.alvarowau.tarea3.db.GestorBBDD;
+import org.alvarowau.tarea3.db.ManagerDataBase;
 import org.alvarowau.tarea3.model.Contacto;
-import org.alvarowau.tarea3.util.GestorContactos;
+import org.alvarowau.tarea3.util.FechaUtil;
+import org.alvarowau.tarea3.util.ContactManager;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
+import java.util.List;
 
-public class ContactoActivity extends AppCompatActivity implements View.OnClickListener {
-
-
+public class ContactoActivity extends AppCompatActivity {
 
     private ActivityContactoBinding binding;
     private int contactoId;
-
-//    private Calendar calendar;
-//    private SimpleDateFormat dateFormat;
     private Contacto contacto;
-    private GestorContactos gestorContactos;
-    private GestorBBDD gestorBD;
-
-
+    private ContactManager contactManager;
+    private ManagerDataBase gestorBD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityContactoBinding.inflate(getLayoutInflater());
-        View view = binding.getRoot();
-        setContentView(view);
-        gestorBD = new GestorBBDD(this);
-        gestorContactos = new GestorContactos(this, gestorBD);
+        setContentView(binding.getRoot());
 
+        gestorBD = new ManagerDataBase(this);
+        contactManager = new ContactManager(this, gestorBD);
 
         contacto = new Contacto();
-        Intent intent = getIntent();
-        if (intent != null) {
-            contactoId = intent.getIntExtra(MainActivity.ID_CONTACTO, -1);  // Si no se pasa el ID, se obtiene -1 como valor predeterminado
-        }
+        contactoId = getIntent().getIntExtra(MainActivity.ID_CONTACTO, -1);
 
-        // Ahora puedes usar el contactoId para obtener el contacto desde la base de datos o el gestor de contactos
         if (contactoId != -1) {
-            Log.d("pruebas", "el id es " + contactoId);
-            contacto = gestorContactos.devolverContactoID(contactoId);
-            Log.d("pruebas", "el contacto es: " +contacto.toString());
-            if (contacto != null) {
-                rellenarDatos(contacto);
-            }
+            initContacto();
+        } else {
+            mostrarErrorYRedirigir("Error: ID de contacto inválido.");
+        }
+
+        initListeners();
+    }
+
+    private void initContacto() {
+        contacto = contactManager.getContactById(contactoId);
+        if (contacto != null) {
+            contacto.setImagenURI(contactManager.getContactImage(contactoId));
+            rellenarDatos();
+        } else {
+            mostrarErrorYRedirigir("Error: No se encontró el contacto.");
         }
     }
 
-
-
-    private void rellenarDatos(Contacto contacto) {
-
-//        if (contacto != null) {
-//            ivFoto.setImageDrawable(Contacto.generarDrawable(this, contacto.getImagenURI()));
-//            etNombre.setText(contacto.getNombre());
-//            cbNotificacion.setChecked(contacto.getTipoAviso().equals("S"));
-//            ArrayList<String> telefonos = gestorContactos.obtenerTelefonos(contacto.getNombre());
-//            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, telefonos);
-//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//            spTelefonos.setAdapter(adapter);
-//            etFechaNac.setText(contacto.getFechaNac());
-//            etMensaje.setText(contacto.getMensaje());
-//            btnEditar.setOnClickListener(this);
-//            btnGuardar.setOnClickListener(this);
-//        }
+    private void initListeners() {
+        binding.etFechaNac.setOnClickListener(v -> showDatePicker());
+        binding.btnGuardar.setOnClickListener(view -> botonGuardarPulsed());
+        binding.btnEditar.setOnClickListener(view -> navigateToContacts());
     }
 
-    @Override
-    public void onClick(View v) {
-
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> setDateInEditText(dayOfMonth, month, year),
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+                .show();
     }
 
-//    private void showDatePickerDialog() {
-//        int year = calendar.get(Calendar.YEAR);
-//        int month = calendar.get(Calendar.MONTH);
-//        int day = calendar.get(Calendar.DAY_OF_MONTH);
-//        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
-//            calendar.set(Calendar.YEAR, year1);
-//            calendar.set(Calendar.MONTH, month1);
-//            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-//            etFechaNac.setText(dateFormat.format(calendar.getTime()));
-//        }, year, month, day);
-//        datePickerDialog.show();
-//    }
+    private void setDateInEditText(int day, int month, int year) {
+        String formattedDate = String.format("%02d/%02d/%d", day, month + 1, year);
+        binding.etFechaNac.setText(formattedDate);
+    }
+
+    private void rellenarDatos() {
+        if (contacto.getImagenURI() == null || contacto.getImagenURI().isEmpty()) {
+            binding.ivContact.setImageResource(R.drawable.avatarcontacto);
+        } else {
+            Picasso.get().load(contacto.getImagenURI()).into(binding.ivContact);
+        }
+
+        binding.etNombre.setText(contacto.getNombre());
+        List<String> phones = contactManager.getPhones(contacto.getNombre());
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, phones);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spTelefonos.setAdapter(adapter);
+
+        String fechaFormateada = FechaUtil.convertirFechaParaIU(contacto.getFechaNac());
+        binding.etFechaNac.setText(fechaFormateada);
+        binding.etMensaje.setText(contacto.getMensaje());
+        llenarCheckBox(contacto.getTipoAviso());
+    }
+
+    private void llenarCheckBox(String tipoAviso) {
+        if ("T".equals(tipoAviso)) {
+            binding.cbNoti.setChecked(true);
+            binding.cbSms.setChecked(true);
+        } else if ("M".equals(tipoAviso)) {
+            binding.cbSms.setChecked(true);
+        } else if ("N".equals(tipoAviso)) {
+            binding.cbNoti.setChecked(true);
+        }
+    }
+
+    private void botonGuardarPulsed() {
+        String mensaje = binding.etMensaje.getText().toString();
+        boolean notificaciones = binding.cbNoti.isChecked();
+        boolean sms = binding.cbSms.isChecked();
+
+        String tipoAviso = saverNotificaciones(notificaciones, sms);
+
+        contacto.setMensaje(mensaje);
+        contacto.setTipoAviso(tipoAviso);
+
+        boolean edicion = gestorBD.actualizarContacto(contacto);
+        if (edicion) {
+            Toast.makeText(this, "Contacto actualizado correctamente", Toast.LENGTH_SHORT).show();
+            volverAlMain();
+        } else {
+            Toast.makeText(this, "Error al actualizar el contacto", Toast.LENGTH_SHORT).show();
+            volverAlMain();
+        }
+    }
+
+    private String saverNotificaciones(boolean notificaciones, boolean sms) {
+        if (notificaciones && sms) return "T";
+        if (sms) return "M";
+        return "N";
+    }
+
+    private void mostrarErrorYRedirigir(String mensaje) {
+        Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show();
+        volverAlMain();
+    }
+
+    private void volverAlMain() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private void navigateToContacts() {
+        String nombre = contactManager.getNameByPhone(contacto.getTelefono());
+        long idCont = contactManager.getIdByName(nombre);
+
+        String lookupKey = contactManager.getLookUpId((int) idCont);
+        Uri selectedContactUri = ContactsContract.Contacts.getLookupUri(contacto.getIdContacto(), lookupKey);
+        Intent editIntent = new Intent(Intent.ACTION_EDIT);
+        editIntent.setDataAndType(selectedContactUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+        editIntent.putExtra("finishActivityOnSaveCompleted", true);
+        startActivity(editIntent);
+    }
 }

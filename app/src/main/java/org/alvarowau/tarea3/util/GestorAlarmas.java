@@ -9,14 +9,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Build;
+import android.provider.Settings;
 import android.telephony.SmsManager;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 import org.alvarowau.tarea3.R;
-import org.alvarowau.tarea3.db.GestorBBDD;
+import org.alvarowau.tarea3.db.ManagerDataBase;
 import org.alvarowau.tarea3.model.Contacto;
 
 import java.util.ArrayList;
@@ -28,24 +30,48 @@ public class GestorAlarmas extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Toast.makeText(context, "¡La alarma se ha activado!", Toast.LENGTH_SHORT).show();
         ArrayList<Contacto> quienCumple;
-        GestorBBDD gestorBD = new GestorBBDD(context);
+        ManagerDataBase gestorBD = new ManagerDataBase(context);
         quienCumple = gestorBD.obtenerQuienCumple();
         gestionarAvisos(context, quienCumple);
     }
 
 
-    public void gestionarAvisos(Context context, ArrayList<Contacto> quienCumple){
-        String datosContactos ="";
-        for (Contacto contacto : quienCumple){
-            datosContactos += contacto.getNombre() + " ";
+    public void gestionarAvisos(Context context, ArrayList<Contacto> quienCumple) {
+        StringBuilder datosContactosNotificacion = new StringBuilder();
 
-            if (contacto.getTipoAviso().equals("S")){
-                datosContactos += "(SMS) ";
-                enviarSMS(context, contacto);
+        for (Contacto contacto : quienCumple) {
+            String tipoAviso = contacto.getTipoAviso();
+
+            if (tipoAviso == null || tipoAviso.isEmpty()) {
+                Toast.makeText(context, "Sin tipo de aviso definido para: " + contacto.getNombre(), Toast.LENGTH_SHORT).show();
+                continue;
+            }
+
+            switch (tipoAviso) {
+                case "M": // Solo Mensaje
+                    enviarSMS(context, contacto);
+                    break;
+
+                case "N": // Solo Notificación
+                    datosContactosNotificacion.append(contacto.getNombre()).append(" ");
+                    break;
+
+                case "T": // Ambos
+                    enviarSMS(context, contacto);
+                    datosContactosNotificacion.append(contacto.getNombre()).append(" ");
+                    break;
+
+                default: // Tipo desconocido
+                    Toast.makeText(context, "Tipo de aviso desconocido para: " + contacto.getNombre(), Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
-        enviarAviso(context, datosContactos);
+
+        if (datosContactosNotificacion.length() > 0) {
+            enviarAviso(context, datosContactosNotificacion.toString().trim());
+        }
     }
+
 
     public void enviarSMS(Context context, Contacto contacto){
 
@@ -68,47 +94,53 @@ public class GestorAlarmas extends BroadcastReceiver {
     }
 
     public void enviarAviso(Context context, String datosContactos){
-
         String canalId = "CHANNEL_ID_101";
         CharSequence name = context.getString(R.string.canal_notificacion);
-        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        int importance = NotificationManager.IMPORTANCE_HIGH;
 
         Notification notify;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(canalId, name, importance);
             channel.setDescription("Canal predeterminado para notificaciones");
+            channel.enableLights(true);
+            channel.setLightColor(Color.RED);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 500, 1000});
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, canalId)
                     .setSmallIcon(R.drawable.ic_cake)
-                    .setContentTitle("Birthday Helper")
-                    .setContentText("Despliega para ver todo el texto")
-                    .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("Hoy es el cumpleaños de: "+ datosContactos))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentTitle("¡Feliz Cumpleaños!")
+                    .setContentText("Hoy es el cumpleaños de: " + datosContactos)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText("Hoy es el cumpleaños de: " + datosContactos))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // Mayor prioridad
                     .setAutoCancel(true)
-                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_cake));
+                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_cake))
+                    .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // Sonido por defecto
+                    .setDefaults(Notification.DEFAULT_VIBRATE);
 
             notify = builder.build();
 
-            NotificationManager notificationManager =  context.getSystemService(NotificationManager.class);
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         } else {
             notify = new NotificationCompat.Builder(context)
                     .setSmallIcon(R.drawable.ic_cake)
-                    .setContentTitle("Birthday Helper")
-                    .setContentText("Despliega para ver todo el texto")
-                    .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("Hoy es el cumpleaños de: "+ datosContactos))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentTitle("¡Feliz Cumpleaños!")
+                    .setContentText("Hoy es el cumpleaños de: " + datosContactos)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText("Hoy es el cumpleaños de: " + datosContactos))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
-                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_cake))
+                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_cake))
+                    .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+                    .setDefaults(Notification.DEFAULT_VIBRATE)
                     .build();
         }
 
-        NotificationManager notificationManager =  context.getSystemService(NotificationManager.class);
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.notify(777, notify);
     }
+
 
     public void configurarAlarmaDiaria(Context context, int hora, int minuto) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">Tarea3</string>
-    <string name="editar_contacto">...</string>
+    <string name="app_name">B-Day Planner</string>
+    <string name="contact_edit">...</string>
     <string name="imagen_contacto">Imagen del contacto</string>
-    <string name="modo_notificacion">Aviso: SOLO notificación</string>
+    <string name="modo_notificacion">Aviso: SÓLO notificación</string>
     <string name="modo_sms">¿Enviar SMS?</string>
     <string name="modo_sin_not">Aviso: Sin notificación</string>
     <string name="aviso_lista_vac">Aviso: Lista de contactos vacía</string>
@@ -11,7 +11,7 @@
     <string name="nombre_contacto">Nombre:</string>
     <string name="nombre_descripcion">Nombre contacto</string>
     <string name="abrir_contacto">Abrir contacto</string>
-    <string name="enviar_sms">¿Enviar sms?</string>
+    <string name="enviar_sms">¿Enviar SMS?</string>
     <string name="telefono_contacto">Teléfono:</string>
     <string name="telefono_lista">Lista de teléfonos</string>
     <string name="fecha_cumple">Fecha de nacimiento:</string>
@@ -20,10 +20,13 @@
     <string name="mensaje_intrs">Escribe aquí el mensaje de felicitación.</string>
     <string name="guardar_contacto">Guardar</string>
     <string name="ign_contacto">Imagen de un contacto</string>
-    <string name="sin_datos">Sin Datos</string>
+    <string name="sin_datos">Sin datos</string>
     <string name="guardar_contacto_ok">Datos guardados</string>
-    <string name="guardar_contacto_fail">Error al guardar datos</string>
+    <string name="guardar_contacto_fail">Error al guardar los datos</string>
     <string name="ajustes_title">Ajustes</string>
     <string name="conf_felicitaciones">Configurar felicitaciones</string>
     <string name="canal_notificacion">canal_cumpleaños</string>
+    <string name="tipo_notificacion">Tipo de notificación</string>
+    <string name="modo_noti">¿Enviar notificación?</string>
+    <string name="edit_fech">Configurar</string>
 </resources>
