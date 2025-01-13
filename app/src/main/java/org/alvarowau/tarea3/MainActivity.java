@@ -38,6 +38,7 @@ import org.alvarowau.tarea3.iu.ContactoActivity;
 import org.alvarowau.tarea3.model.Contacto;
 import org.alvarowau.tarea3.util.ContactosAdapter;
 import org.alvarowau.tarea3.util.GestorAlarmas;
+import org.alvarowau.tarea3.util.GestorContactos;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     GestorBBDD gestorBD;
     int horaAlarma;
     int minutoAlarma;
+    GestorContactos gestorContactos;
 
     boolean permisosContactos = false;
     boolean permisosSMS = false;
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         gestorBD = new GestorBBDD(this);
+        gestorContactos = new GestorContactos(this, gestorBD);
 
         // Inicia la solicitud de permisos
         pedirPermisos();
@@ -187,72 +190,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private ArrayList<Contacto> leerContactos() {
-        ArrayList<Contacto> listaContactos = new ArrayList<>();
-        ContentResolver contentResolver = getContentResolver();
-        String[] projection = {
-                ContactsContract.Contacts._ID,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-        };
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        Cursor cursor = contentResolver.query(uri, projection, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
-        if (cursor != null && cursor.moveToFirst()) {
-            int idContactoIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID);
-            int nombreID = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-            int telefonoID = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-            String nombreAnterior = null; // Nombre del contacto anterior
-            Contacto contactoActual = null;
-
-            do {
-                int idContacto = cursor.getInt(idContactoIndex);
-                String nombre = cursor.getString(nombreID);
-                String telefono = cursor.getString(telefonoID);
-
-                if (!nombre.equals(nombreAnterior)) {
-                    if (contactoActual != null) {
-                        listaContactos.add(contactoActual);
-                    }
-                    contactoActual = new Contacto(idContacto, nombre, telefono);
-                    nombreAnterior = nombre;
-                }
-            } while (cursor.moveToNext());
-
-            if (contactoActual != null) {
-                listaContactos.add(contactoActual);
-            }
-
-            cursor.close();
-        }
-        return listaContactos;
-    }
 
     public void mostrarContactos() {
-        boolean existeTabla = gestorBD.existeTabla("cumples");
-        if (!existeTabla) {
-            gestorBD.crearTabla();
-            ArrayList<Contacto> listaContactos = leerContactos();
-            gestorBD.guardarTodosContactos(listaContactos);
-        }
-
-        ArrayList<Contacto> listaContactosListView = gestorBD.obtenerContactosListView(this);
+        ArrayList<Contacto> listaContactosListView = gestorContactos.obtenerContactosListView();
         ListView contactos = findViewById(R.id.listview_contactos);
         ContactosAdapter contactoAdapter = new ContactosAdapter(this, listaContactosListView);
         contactos.setAdapter(contactoAdapter);
 
-        contactos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Contacto contactoSeleccionado = listaContactosListView.get(position);
-
-                Intent intent = new Intent(MainActivity.this, ContactoActivity.class);
-                intent.putExtra("contacto", (CharSequence) contactoSeleccionado);
-
-                startActivity(intent);
-            }
+        contactos.setOnItemClickListener((parent, view, position, id) -> {
+            Contacto contactoSeleccionado = listaContactosListView.get(position);
+            Intent intent = new Intent(MainActivity.this, ContactoActivity.class);
+            intent.putExtra("contacto", (CharSequence) contactoSeleccionado);
+            startActivity(intent);
         });
     }
+
 
     private void mostrarConfiguracion(){
 
