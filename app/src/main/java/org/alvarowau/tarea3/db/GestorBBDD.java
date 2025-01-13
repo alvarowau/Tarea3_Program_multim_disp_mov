@@ -21,6 +21,9 @@ public class GestorBBDD extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
     private static final String TABLE_NAME = "cumples";
 
+    private final char TIPO_NOTI = 'M';
+    private final String MENSAJE = "MUCHAS FELICIDADES";
+
     public GestorBBDD(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -29,6 +32,8 @@ public class GestorBBDD extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
     }
+
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -70,10 +75,9 @@ public class GestorBBDD extends SQLiteOpenHelper {
             values.put("ID", contacto.getIdContacto());
             values.put("Nombre", contacto.getNombre());
             values.put("Telefono", contacto.getTelefono());
-            //values.put("FechaNacimiento", contacto.getFechaNac());
-            values.put("FechaNacimiento", "");
-            values.put("TipoNotif", "");
-            values.put("Mensaje", "");
+            values.put("FechaNacimiento", contacto.getFechaNac());
+            values.put("TipoNotif", Character.toString(TIPO_NOTI));
+            values.put("Mensaje", MENSAJE);
 
             // Insertar el contacto en la tabla
             db.insert("cumples", null, values);
@@ -130,22 +134,7 @@ public class GestorBBDD extends SQLiteOpenHelper {
         return listaContactosListView;
     }
 
-    public void guardarUnContacto (Contacto contacto){
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("ID", contacto.getIdContacto());
-        values.put("Nombre", contacto.getNombre());
-        values.put("Telefono", contacto.getTelefono());
-        values.put("FechaNacimiento", contacto.getFechaNac());
-        values.put("TipoNotif", contacto.getTipoAviso());
-        values.put("Mensaje", contacto.getMensaje());
 
-        String whereClause = "ID = ?";
-        String[] whereArgs = {String.valueOf(contacto.getIdContacto())};
-
-        db.update("cumples", values, whereClause, whereArgs);
-        db.close();
-    }
 
     public ArrayList<Contacto> obtenerQuienCumple() {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -190,6 +179,42 @@ public class GestorBBDD extends SQLiteOpenHelper {
         db.close();
 
         return quienCumple;
+    }
+
+
+
+    public Contacto obtenerContactoPorId(int idContacto) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Contacto contacto = null;
+
+        // Consulta para obtener el contacto con el ID proporcionado
+        String selectQuery = "SELECT * FROM " + TABLE_NAME + " WHERE ID = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(idContacto)});
+
+        // Si se encuentra un contacto con el ID especificado
+        if (cursor != null && cursor.moveToFirst()) {
+            // Recuperar los datos del contacto
+            int idContactoID = cursor.getColumnIndex("ID");
+            int id = cursor.getInt(idContactoID);
+            int nombreID = cursor.getColumnIndex("Nombre");
+            String nombre = cursor.getString(nombreID);
+            int telefonoID = cursor.getColumnIndex("Telefono");
+            String telefono = cursor.getString(telefonoID);
+            int fechaNacID = cursor.getColumnIndex("FechaNacimiento");
+            String fechaNac = cursor.getString(fechaNacID);
+            int tipoNotifID = cursor.getColumnIndex("TipoNotif");
+            String tipoNotif = cursor.getString(tipoNotifID);
+            int mensajeID = cursor.getColumnIndex("Mensaje");
+            String mensaje = cursor.getString(mensajeID);
+
+            // Crear el objeto Contacto con los datos recuperados
+            contacto = new Contacto(id, nombre, telefono, tipoNotif, fechaNac, mensaje, null);
+
+            cursor.close();
+        }
+
+        db.close();
+        return contacto;
     }
 
 
